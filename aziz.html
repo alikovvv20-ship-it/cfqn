@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AMAZON PRIME — AZIZ</title>
+<style>
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:#090e1b;color:#f5f7fb;font-family:Arial,sans-serif}
+header{background:#111a2e;padding:16px 7%;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:10;border-bottom:1px solid #263650}
+.logo{font-size:25px;font-weight:800;color:#ff9d00}
+nav{display:flex;gap:16px;flex-wrap:wrap}nav a{color:white;text-decoration:none}
+button{cursor:pointer;border:0;border-radius:8px;padding:11px 16px;font-weight:bold;background:#ff9d00;color:#111}
+button:hover{background:#ffc04a;transform:translateY(-2px)}
+.hero{padding:76px 7%;background:radial-gradient(circle at 80% 20%,#17617a 0,#172746 42%,#10182b 100%)}
+.hero h1{font-size:clamp(36px,6vw,62px);margin:0 0 15px}.hero p{color:#c4d4e8;font-size:18px;max-width:600px;line-height:1.6}
+.container{padding:42px 7%;max-width:1500px;margin:auto}
+.search{width:100%;padding:15px;border-radius:9px;border:1px solid #34445e;background:#17243b;color:white;font-size:16px;margin:10px 0 22px}
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:25px}.chip{background:#192740;color:white;border:1px solid #34445e}
+.chip.active{background:#ff9d00;color:#111;border-color:#ff9d00}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.card{background:#141f33;border:1px solid #273650;border-radius:13px;overflow:hidden;transition:.25s}
+.card:hover{transform:translateY(-5px);border-color:#ff9d00;box-shadow:0 12px 28px #0005}
+.pic{height:150px;background:linear-gradient(135deg,#203858,#07516b);display:flex;align-items:center;justify-content:center;font-size:68px}
+.info{padding:17px}.info h3{margin:8px 0 12px;min-height:42px}.seller{font-size:13px;color:#91a4c2}
+.price{font-size:22px;color:#ffb02e;font-weight:bold;margin:15px 0}
+.actions{display:flex;gap:8px}.actions button:first-child{flex:1}.heart{background:#273650;color:white;font-size:19px;padding:8px 12px}
+#cart{display:none;background:#141f33;padding:25px;border:1px solid #273650;border-radius:12px;margin-top:30px}
+.cart-item{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #34445e;padding:13px 0;flex-wrap:wrap}
+.remove{background:#d94141;color:white}.qty{display:flex;align-items:center;gap:8px}.qty button{padding:5px 10px}
+#empty{text-align:center;color:#91a4c2;padding:25px;display:none}
+footer{text-align:center;padding:30px;background:#111a2e;color:#8292aa;margin-top:50px}
+.note{color:#9aabc4;font-size:13px;line-height:1.5}
+@media(max-width:650px){header{position:relative;padding:16px 5%}.hero{padding:52px 6%}.container{padding:32px 5%}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">AMAZON PRIME</div>
+  <nav><a href="#">Главная</a><a href="#catalog">Каталог</a><a href="#cart">Корзина</a></nav>
+  <button onclick="toggleCart()">🛒 Корзина (<span id="count">0</span>)</button>
+</header>
+<section class="hero">
+  <h1>Всё нужное в одном месте</h1>
+  <p>Выбирай товары, сравнивай цены и собирай покупки в одном удобном месте.</p>
+  <button onclick="document.getElementById('catalog').scrollIntoView({behavior:'smooth'})">Смотреть товары</button>
+</section>
+<main class="container" id="catalog">
+  <h2>Каталог товаров</h2>
+  <input class="search" id="search" type="search" placeholder="🔍 Поиск товаров...">
+  <div class="chips" id="chips"></div>
+  <div class="grid" id="products"></div>
+  <div id="empty">Товары не найдены.</div>
+  <section id="cart">
+    <h2>🛒 Моя корзина</h2><div id="cart-items"></div>
+    <h3>Итого: <span id="total">0</span> $</h3>
+    <button onclick="checkout()">Оформить заказ</button>
+    <p class="note">Демонстрационный магазин: настоящая оплата не подключена.</p>
+  </section>
+</main>
+<footer>© 2026 AMAZON PRIME · AZIZ</footer>
+<script>
+const PRODUCTS=[
+{id:1,name:"Беспроводные наушники",category:"Электроника",price:35,emoji:"🎧",seller:"SoundHub"},
+{id:2,name:"Умные часы",category:"Электроника",price:59,emoji:"⌚",seller:"TimeLab"},
+{id:3,name:"Рюкзак городской",category:"Одежда",price:28,emoji:"🎒",seller:"UrbanBag"},
+{id:4,name:"Худи оверсайз",category:"Одежда",price:32,emoji:"👕",seller:"StreetWear"},
+{id:5,name:"Кофеварка",category:"Дом",price:45,emoji:"☕",seller:"HomeCup"},
+{id:6,name:"Настольная лампа",category:"Дом",price:19,emoji:"💡",seller:"LightBox"},
+{id:7,name:"Футбольный мяч",category:"Спорт",price:17,emoji:"⚽",seller:"FitZone"},
+{id:8,name:"Игровая мышь",category:"Электроника",price:25,emoji:"🖱️",seller:"GamePro"}];
+let cart=JSON.parse(localStorage.getItem("azizCart")||"{}");
+let favorites=JSON.parse(localStorage.getItem("azizFav")||"[]");
+let category="Все",favoritesOnly=false;
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem("azizCart",JSON.stringify(cart));localStorage.setItem("azizFav",JSON.stringify(favorites))}
+function drawProducts(){
+ const cats=["Все",...new Set(PRODUCTS.map(p=>p.category))];
+ $("chips").innerHTML=cats.map(c=>`<button class="chip ${c===category?"active":""}" data-cat="${c}">${c}</button>`).join("")+
+ `<button class="chip" id="favFilter">❤️ Избранное</button>`;
+ $("chips").querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{category=b.dataset.cat;favoritesOnly=false;drawProducts()});
+ $("favFilter").onclick=()=>{favoritesOnly=!favoritesOnly;drawProducts()};
+ const q=$("search").value.toLowerCase();
+ const shown=PRODUCTS.filter(p=>(category==="Все"||p.category===category)&&p.name.toLowerCase().includes(q)&&(!favoritesOnly||favorites.includes(p.id)));
+ $("products").innerHTML=shown.map(p=>`<article class="card"><div class="pic">${p.emoji}</div><div class="info"><span class="seller">Продавец: ${p.seller}</span><h3>${p.name}</h3><div class="price">${p.price} $</div><div class="actions"><button onclick="add(${p.id})">В корзину</button><button class="heart" onclick="favorite(${p.id})">${favorites.includes(p.id)?"❤️":"♡"}</button></div></div></article>`).join("");
+ $("empty").style.display=shown.length?"none":"block";
+}
+function add(id){cart[id]=(cart[id]||0)+1;save();update()}
+function favorite(id){favorites.includes(id)?favorites=favorites.filter(x=>x!==id):favorites.push(id);save();drawProducts()}
+function removeItem(id){delete cart[id];save();update()}
+function changeQty(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];save();update()}
+function update(){
+ $("count").textContent=Object.values(cart).reduce((a,b)=>a+b,0);
+ let total=0;$("cart-items").innerHTML="";
+ PRODUCTS.forEach(p=>{if(cart[p.id]){total+=p.price*cart[p.id];$("cart-items").innerHTML+=`<div class="cart-item"><span>${p.emoji} ${p.name}</span><div class="qty"><button onclick="changeQty(${p.id},-1)">−</button><b>${cart[p.id]}</b><button onclick="changeQty(${p.id},1)">+</button></div><b>${p.price*cart[p.id]} $</b><button class="remove" onclick="removeItem(${p.id})">Удалить</button></div>`}});
+ $("total").textContent=total;
+}
+function toggleCart(){const c=$("cart");c.style.display=c.style.display==="block"?"none":"block";if(c.style.display==="block")c.scrollIntoView({behavior:"smooth"})}
+function checkout(){alert(Object.keys(cart).length?"Демонстрационный магазин: оплата пока не подключена.":"Корзина пуста!")}
+$("search").addEventListener("input",drawProducts);drawProducts();update();
+</script>
+</body>
+</html>
